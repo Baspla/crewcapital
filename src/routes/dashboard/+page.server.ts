@@ -12,7 +12,8 @@ export const load: PageServerLoad = async (event) => {
 			email: user.email,
 			username: user.username,
 			displayName: user.displayName,
-			groups: user.groups
+			groups: user.groups,
+			avatarUrl: user.avatarUrl,
 		}
 	};
 };

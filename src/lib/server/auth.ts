@@ -14,12 +14,14 @@ import { env } from '$env/dynamic/private';
  * - DEBUG_USER_EMAIL: Email (default: 'debug@localhost')
  * - DEBUG_USER_NAME: Username/Display name (default: 'Debug User')
  * - DEBUG_USER_GROUPS: Comma-separated groups (default: 'admin,users')
+ * - DEBUG_USER_AVATAR_URL: Avatar URL (default: sample image)
  */
 const DEBUG_USER = {
 	externalId: env.DEBUG_USER_ID || 'debug-user-id',
 	email: env.DEBUG_USER_EMAIL || 'debug@localhost',
 	username: env.DEBUG_USER_NAME || 'Debug User',
-	groups: (env.DEBUG_USER_GROUPS || 'admin,users').split(',').map((g) => g.trim())
+	groups: (env.DEBUG_USER_GROUPS || 'admin,users').split(',').map((g) => g.trim()),
+	avatarUrl: env.DEBUG_USER_AVATAR_URL || 'https://i.pravatar.cc/150?u=user-debug'
 };
 
 /**
@@ -28,6 +30,24 @@ const DEBUG_USER = {
  */
 function shouldUseDebugAuth(): boolean {
 	return dev && env.DEBUG_AUTH === 'true';
+}
+
+/**
+ * Helper to fetch user picture from OIDC provider using access token
+ */
+async function getPictureFromOidc(accessToken: string, userInfoEndpoint: string): Promise<string | null> {
+	try {
+		const res = await fetch(userInfoEndpoint, {
+			headers: { Authorization: `Bearer ${accessToken}` }
+		});
+		if (res.ok) {
+			const data = await res.json();
+			return data.picture || null;
+		}
+	} catch (e) {
+		console.error('Failed to fetch OIDC picture', e);
+	}
+	return null;
 }
 
 /**
@@ -45,12 +65,18 @@ const HeaderProvider = Credentials({
 		const email = request.headers.get('x-auth-request-email');
 		const username = request.headers.get('x-auth-request-preferred-username');
 		const groupsHeader = request.headers.get('x-auth-request-groups');
+		const accessToken = request.headers.get('x-auth-request-access-token');
+		const userInfoEndpoint = request.headers.get('x-auth-request-userinfo-endpoint');
 
 		if (!userId || !email) {
 			return null;
 		}
 
 		const groups = groupsHeader ? groupsHeader.split(',').map((g) => g.trim()) : [];
+		let avatarUrl: string | null = null;
+		if (accessToken && userInfoEndpoint) {
+			avatarUrl = await getPictureFromOidc(accessToken, userInfoEndpoint);
+		}
 
 		// Find or create user in database
 		let dbUser = await db.select().from(user).where(eq(user.externalId, userId)).get();
@@ -65,6 +91,7 @@ const HeaderProvider = Credentials({
 					username: username || email.split('@')[0],
 					displayName: username || email.split('@')[0],
 					groups: groups,
+					avatarUrl: avatarUrl,
 					active: true
 				})
 				.returning();
@@ -76,7 +103,8 @@ const HeaderProvider = Credentials({
 				.set({
 					email: email,
 					username: username || dbUser.username,
-					groups: groups
+					groups: groups,
+					avatarUrl: avatarUrl || dbUser.avatarUrl
 				})
 				.where(eq(user.id, dbUser.id))
 				.returning();
@@ -87,6 +115,7 @@ const HeaderProvider = Credentials({
 			id: dbUser.id,
 			email: dbUser.email,
 			name: dbUser.displayName,
+			image: dbUser.avatarUrl,
 			groups: dbUser.groups
 		};
 	}
@@ -128,6 +157,9 @@ export const proxyAuthHandle: Handle = async ({ event, resolve }) => {
 	let email = event.request.headers.get('x-auth-request-email');
 	let username = event.request.headers.get('x-auth-request-preferred-username');
 	let groupsHeader = event.request.headers.get('x-auth-request-groups');
+	let avatarUrl: string | null = null;
+	const accessToken = event.request.headers.get('x-auth-request-access-token');
+	const userInfoEndpoint = event.request.headers.get('x-auth-request-userinfo-endpoint');
 
 	// In dev mode with DEBUG_AUTH=true, use debug user if no proxy headers present
 	if (shouldUseDebugAuth() && !userId) {
@@ -135,12 +167,16 @@ export const proxyAuthHandle: Handle = async ({ event, resolve }) => {
 		email = DEBUG_USER.email;
 		username = DEBUG_USER.username;
 		groupsHeader = DEBUG_USER.groups.join(',');
+		avatarUrl = DEBUG_USER.avatarUrl;
 
 		console.log('[DEBUG AUTH] Using debug user:', DEBUG_USER.email);
 	}
 
 	if (userId && email) {
 		const groups = groupsHeader ? groupsHeader.split(',').map((g) => g.trim()) : [];
+		if (accessToken && userInfoEndpoint && !avatarUrl) {
+			avatarUrl = await getPictureFromOidc(accessToken, userInfoEndpoint);
+		}
 
 		// Find or create user in database
 		let dbUser = await db.select().from(user).where(eq(user.externalId, userId)).get();
@@ -154,18 +190,24 @@ export const proxyAuthHandle: Handle = async ({ event, resolve }) => {
 					username: username || email.split('@')[0],
 					displayName: username || email.split('@')[0],
 					groups: groups,
+					avatarUrl: avatarUrl,
 					active: true
 				})
 				.returning();
 			dbUser = newUser;
-		} else if (dbUser.email !== email || dbUser.username !== username) {
+		} else if (
+			dbUser.email !== email ||
+			dbUser.username !== username ||
+			(avatarUrl && dbUser.avatarUrl !== avatarUrl)
+		) {
 			// Update if info changed
 			const [updatedUser] = await db
 				.update(user)
 				.set({
 					email: email,
 					username: username || dbUser.username,
-					groups: groups
+					groups: groups,
+					avatarUrl: avatarUrl || dbUser.avatarUrl
 				})
 				.where(eq(user.id, dbUser.id))
 				.returning();
@@ -180,6 +222,7 @@ export const proxyAuthHandle: Handle = async ({ event, resolve }) => {
 			username: dbUser.username,
 			displayName: dbUser.displayName,
 			groups: dbUser.groups || [],
+			avatarUrl: dbUser.avatarUrl,
 			active: dbUser.active
 		};
 	}

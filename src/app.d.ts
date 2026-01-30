@@ -10,6 +10,7 @@ declare global {
 				email: string;
 				username: string | null;
 				displayName: string | null;
+				avatarUrl: string | null;
 				groups: string[];
 				active: boolean | null;
 			};

@@ -8,6 +8,7 @@ export const user = sqliteTable('user', {
 	email: text('email').unique().notNull(),
 	username: text('username').unique(),
 	displayName: text('display_name'),
+	avatarUrl: text('avatar_url'),
 	givenName: text('given_name'),
 	familyName: text('family_name'),
 	active: integer('active', { mode: 'boolean' }).default(true),

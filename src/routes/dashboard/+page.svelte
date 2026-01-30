@@ -10,6 +10,9 @@
 	<h1 class="mb-8 text-3xl font-bold">Dashboard</h1>
 
 	<div class="rounded-lg border bg-white p-6 shadow-sm">
+        {#if data.user.avatarUrl}
+            <img src="{data.user.avatarUrl}" alt="Avatar von {data.user.displayName || data.user.username}" class="mb-4 h-16 w-16 rounded-full object-cover" />
+        {/if}
 		<h2 class="mb-4 text-xl font-semibold">Willkommen, {data.user.displayName || data.user.username}!</h2>
 
 		<div class="space-y-3">
