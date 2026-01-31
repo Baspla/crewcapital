@@ -2,4 +2,4 @@
 	import WorkInProgress from '$lib/components/WorkInProgress.svelte';
 	import { page } from '$app/state';
 </script>
-<WorkInProgress />
+<p>I camp on Benis Turm</p>

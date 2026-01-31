@@ -8,6 +8,8 @@
 	import { Dialog, Portal, SegmentedControl } from '@skeletonlabs/skeleton-svelte';
 	import { onMount } from 'svelte';
 
+	const HREF_BONUS = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+
 	// Define your available themes (ensure these are imported in your app.css)
 	const themes = [
 		{ id: 'cerberus', name: 'Cerberus', icon: '🐺' },
@@ -92,7 +94,7 @@
 </script>
 
 <Dialog>
-	<Dialog.Trigger class="w-full">
+	<Dialog.Trigger>
 		{@render children()}
 	</Dialog.Trigger>
 

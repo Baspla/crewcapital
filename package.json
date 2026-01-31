@@ -41,7 +41,9 @@
 		"@auth/sveltekit": "^1.11.1",
 		"@lucide/svelte": "^0.563.1",
 		"better-sqlite3": "^12.6.2",
-		"drizzle-orm": "^0.45.1"
+		"drizzle-orm": "^0.45.1",
+		"node-cron": "^4.2.1",
+		"yahoo-finance2": "^3.13.0"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

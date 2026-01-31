@@ -6,7 +6,6 @@
 @import '@skeletonlabs/skeleton/themes/cerberus'; 
 @import '@skeletonlabs/skeleton/themes/catppuccin';
 @import '@skeletonlabs/skeleton/themes/crimson';
-@import '@skeletonlabs/skeleton/themes/modern';
 @import '@skeletonlabs/skeleton/themes/mona';
 @import '@skeletonlabs/skeleton/themes/nosh';
 @import '@skeletonlabs/skeleton/themes/nouveau';
@@ -14,3 +13,36 @@
 @import '@skeletonlabs/skeleton/themes/terminus'; 
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  scrollbar-gutter:stable;
+  scroll-behavior:smooth
+}
+:is([data-theme=catppuccin],
+[data-theme=cerberus],
+[data-theme=crimson],
+[data-theme=legacy],
+[data-theme=nouveau],
+[data-theme=mona],
+[data-theme=nosh],
+[data-theme=pine],
+[data-theme=rose]) body {
+  background-image:radial-gradient(at 0 25%,#7373731a 0,#0000 30%),radial-gradient(at 15% 6%,#7373730d 0,#0000 30%);
+  background-attachment:fixed
+}
+@supports (color:color-mix(in lab,red,red)) {
+  :is([data-theme=catppuccin],
+[data-theme=cerberus],
+[data-theme=crimson],
+[data-theme=legacy],
+[data-theme=nouveau],
+[data-theme=mona],
+[data-theme=nosh],
+[data-theme=pine],
+[data-theme=rose]) body {
+    background-image:radial-gradient(at 0% 25%,color-mix(in oklab,var(--color-primary-500)10%,transparent)0px,transparent 30%),radial-gradient(at 15% 6%,color-mix(in oklab,var(--color-success-500)5%,transparent)0px,transparent 30%);
+  }
+}
+.hide-scrollbar-track {
+  scrollbar-color:var(--color-surface-300-700)#0000
+}

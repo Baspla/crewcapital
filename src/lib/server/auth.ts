@@ -6,6 +6,7 @@ import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
+import { ensureUserPortfolio, upsertUser } from '$lib/server/db/actions';
 
 /**
  * Debug user configuration for development mode.
@@ -78,38 +79,18 @@ const HeaderProvider = Credentials({
 			avatarUrl = await getPictureFromOidc(accessToken, userInfoEndpoint);
 		}
 
-		// Find or create user in database
-		let dbUser = await db.select().from(user).where(eq(user.externalId, userId)).get();
-
-		if (!dbUser) {
-			// Create new user
-			const [newUser] = await db
-				.insert(user)
-				.values({
-					externalId: userId,
-					email: email,
-					username: username || email.split('@')[0],
-					displayName: username || email.split('@')[0],
-					groups: groups,
-					avatarUrl: avatarUrl,
-					active: true
-				})
-				.returning();
-			dbUser = newUser;
-		} else {
-			// Update existing user with latest info from IdP
-			const [updatedUser] = await db
-				.update(user)
-				.set({
-					email: email,
-					username: username || dbUser.username,
-					groups: groups,
-					avatarUrl: avatarUrl || dbUser.avatarUrl
-				})
-				.where(eq(user.id, dbUser.id))
-				.returning();
-			dbUser = updatedUser;
-		}
+		// Use upsert to handle race conditions
+		const [dbUser] = await upsertUser({
+			externalId: userId,
+			email: email,
+			username: username || email.split('@')[0],
+			displayName: username || email.split('@')[0],
+			groups: groups,
+			avatarUrl: avatarUrl,
+			active: true
+		});
+			
+		await ensureUserPortfolio(dbUser.id);
 
 		return {
 			id: dbUser.id,
@@ -178,42 +159,17 @@ export const proxyAuthHandle: Handle = async ({ event, resolve }) => {
 			avatarUrl = await getPictureFromOidc(accessToken, userInfoEndpoint);
 		}
 
-		// Find or create user in database
-		let dbUser = await db.select().from(user).where(eq(user.externalId, userId)).get();
+		const [dbUser] = await upsertUser({
+			externalId: userId,
+			email: email,
+			username: username || email.split('@')[0],
+			displayName: username || email.split('@')[0],
+			groups: groups,
+			avatarUrl: avatarUrl,
+			active: true
+		});
 
-		if (!dbUser) {
-			const [newUser] = await db
-				.insert(user)
-				.values({
-					externalId: userId,
-					email: email,
-					username: username || email.split('@')[0],
-					displayName: username || email.split('@')[0],
-					groups: groups,
-					avatarUrl: avatarUrl,
-					active: true
-				})
-				.returning();
-			dbUser = newUser;
-		} else if (
-			dbUser.email !== email ||
-			dbUser.username !== username ||
-			(avatarUrl && dbUser.avatarUrl !== avatarUrl)
-		) {
-			// Update if info changed
-			const [updatedUser] = await db
-				.update(user)
-				.set({
-					email: email,
-					username: username || dbUser.username,
-					groups: groups,
-					avatarUrl: avatarUrl || dbUser.avatarUrl
-				})
-				.where(eq(user.id, dbUser.id))
-				.returning();
-			dbUser = updatedUser;
-		}
-
+		await ensureUserPortfolio(dbUser.id);
 		// Set user in locals for access in routes
 		event.locals.user = {
 			id: dbUser.id,

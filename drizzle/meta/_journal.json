@@ -15,6 +15,27 @@
       "when": 1769772958819,
       "tag": "0001_flippant_prima",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1769813604148,
+      "tag": "0002_overconfident_nightshade",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1769817215377,
+      "tag": "0003_lean_dorian_gray",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1769818379264,
+      "tag": "0004_small_dakota_north",
+      "breakpoints": true
     }
   ]
 }
