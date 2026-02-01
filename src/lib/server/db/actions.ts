@@ -117,6 +117,20 @@ export const getAssetById = async (id: string) => {
     });
 };
 
+export const getAssetBySymbol = async (symbol: string) => {
+    return await db.query.asset.findFirst({
+        where: eq(schema.asset.symbol, symbol),
+        with: {
+            category: true,
+            currency: true,
+            priceHistory: {
+                orderBy: [desc(schema.assetPriceHistory.date)],
+                limit: 500
+            }
+        }
+    });
+};
+
 export const createAsset = async (data: InferInsertModel<typeof schema.asset>) => {
     return await db.insert(schema.asset).values(data).returning();
 };

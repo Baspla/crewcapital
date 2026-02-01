@@ -1,5 +1,5 @@
 import { fail } from '@sveltejs/kit';
-import { createAsset, getCurrencies, getAssetCategories, getAssetsPaginated, updateAssetHistory } from '$lib/server/db/actions';
+import { createAsset, getCurrencies, getAssetCategories, getAssetsPaginated, updateAssetHistory, getAssetBySymbol } from '$lib/server/db/actions';
 import { fetchHistoricalData, fetchStockQuote } from '$lib/server/yahoo/finance';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -66,12 +66,23 @@ export const actions: Actions = {
                 return fail(500, { error: `Category '${categoryId}' not found in DB` });
             }
 
-            await createAsset({
+           const createdAssets = await createAsset({
                 symbol: quote.symbol,
                 name: quote.longName || quote.shortName || quote.symbol,
                 categoryId: categoryId,
                 currencyId: quoteCurrency,
             });
+
+            const asset = createdAssets[0];
+
+            if (!asset) {
+                return fail(500, { symbol, error: 'Failed to create asset in DB' });
+            }
+
+            const startDate = new Date();
+            startDate.setFullYear(startDate.getFullYear() - 1);
+            const endDate = new Date();
+            await updateAssetHistory(asset.id, startDate, endDate);
 
             return { success: true, symbol: quote.symbol };
         } catch (error) {
