@@ -1,9 +1,25 @@
 import { fail } from '@sveltejs/kit';
-import { createAsset, getCurrencies, getAssetCategories, getAssetsPaginated } from '$lib/server/db/actions';
+import { createAsset, getCurrencies, getAssetCategories, getAssetsPaginated, updateAssetHistory } from '$lib/server/db/actions';
 import { fetchHistoricalData, fetchStockQuote } from '$lib/server/yahoo/finance';
 import type { Actions, PageServerLoad } from './$types';
 
 export const actions: Actions = {
+    refreshHistory: async ({ request }) => {
+        const formData = await request.formData();
+        const assetId = formData.get('assetId');
+
+        if (!assetId || typeof assetId !== 'string') {
+            return fail(400, { missing: true });
+        }
+        
+        try {
+            await updateAssetHistory(assetId);
+            return { success: true, historyUpdated: true };
+        } catch (error) {
+            console.error(error);
+            return fail(500, { assetId, error: 'Failed to update history' });
+        }
+    },
     addAsset: async ({ request }) => {
 
         const formData = await request.formData();

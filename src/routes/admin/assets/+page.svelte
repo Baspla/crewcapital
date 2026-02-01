@@ -4,7 +4,9 @@
 	import { goto } from '$app/navigation';
 	import WorkInProgress from '$lib/components/WorkInProgress.svelte';
 	import { Pagination } from '@skeletonlabs/skeleton-svelte';
-	import { ArrowLeftIcon, ArrowRightIcon } from '@lucide/svelte';
+	import { ArrowLeftIcon, ArrowRightIcon, RefreshCwIcon } from '@lucide/svelte';
+	import AssetIcon from '$lib/components/AssetIcon.svelte';
+	import SimpleChart from '$lib/components/SimpleChart.svelte';
 
 	let { form, data } = $props();
 
@@ -48,12 +50,13 @@
 	{/if}
 
 	<h2 class="mt-6 mb-2 text-xl font-semibold">Assets</h2>
-	<table class="table table-auto">
+	<table class="table table-auto w-full">
 		<thead>
 			<tr>
-				<th class="px-4 py-2 text-left">ID</th>
+				<th class="px-4 py-2 text-left">Logo</th>
 				<th class="px-4 py-2 text-left">Ticker</th>
 				<th class="px-4 py-2 text-left">Name</th>
+				<th class="px-4 py-2 text-left">Chart</th>
 				<th class="px-4 py-2 text-left">Category</th>
 				<th class="px-4 py-2 text-left">Actions</th>
 			</tr>
@@ -61,14 +64,29 @@
 		<tbody>
 			{#each page.data.assets as asset (asset.id)}
 				<tr>
-					<td class="px-4 py-2"><a href="/admin/assets/{asset.id}">{asset.id}</a></td>
+					<td class="px-4 py-2">
+						<AssetIcon asset={asset} class="size-6" shape="rounded" />
+					</td>
 					<td class="px-4 py-2">{asset.symbol}</td>
 					<td class="px-4 py-2"><a href="/admin/assets/{asset.id}">{asset.name}</a></td>
-					<td class="px-4 py-2">{asset.category.name}</td>
 					<td class="px-4 py-2">
-						<button class="rounded-base preset-filled bg-primary-200-800 text-primary-contrast-light px-2 py-1 transition me-2">
+						<SimpleChart
+							data={asset.priceHistory}
+							height="50px"
+							currency={asset.currency}
+						/>
+					</td>
+					<td class="px-4 py-2">{asset.category.name}</td>
+					<td class="px-4 py-2 flex items-center gap-2">
+						<button class="rounded-base preset-filled bg-primary-200-800 text-primary-contrast-light px-2 py-1 transition">
 							Update
 						</button>
+						<form method="POST" action="?/refreshHistory" use:enhance>
+							<input type="hidden" name="assetId" value={asset.id} />
+							<button class="rounded-base preset-filled bg-secondary-200-800 px-2 py-1 transition text-white" title="Fetch 1y History">
+								<RefreshCwIcon class="size-4" />
+							</button>
+						</form>
 						<button class="rounded-base preset-outlined bg-error-200-800 px-2 py-1 transition">
 							Delete
 						</button>
