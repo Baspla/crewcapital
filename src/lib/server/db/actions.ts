@@ -1,7 +1,7 @@
 import { eq, and, desc, asc, inArray, count, gte, lte, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import { db } from './index';
 import * as schema from './schema';
-import { fetchStockQuote } from '../yahoo/finance';
+import { fetchQuoteCombined, fetchStockQuote } from '../yahoo/finance';
 
 // --- Users ---
 export const getUsers = async () => {
@@ -113,6 +113,13 @@ export const getAssetById = async (id: string) => {
 };
 
 export const createAsset = async (data: InferInsertModel<typeof schema.asset>) => {
+    // If an asset with the same symbol exists, we skip creating a new one
+    const existingAsset = await db.query.asset.findFirst({
+        where: eq(schema.asset.symbol, data.symbol)
+    });
+    if (existingAsset) {
+        return existingAsset;
+    }
     return await db.insert(schema.asset).values(data).returning();
 };
 
@@ -492,9 +499,9 @@ export const ensureCurrencyConversions = async () => {
 
 export const updateMarketData = async () => {
     const assets = await getAssets();
-    for (const asset of assets) {
+    assets.forEach(async (asset) => {
         if (asset.symbol) {
-            fetchStockQuote(asset.symbol).then(async (quote) => {
+            fetchQuoteCombined(asset.symbol).then(async (quote) => {
                 if (quote && quote.regularMarketPrice) {
                     const quoteDate = quote.regularMarketTime ? new Date(quote.regularMarketTime) : new Date();
 
@@ -506,7 +513,6 @@ export const updateMarketData = async () => {
                     });
 
                     if (!existing) {
-                        // Add new price history entry
                         addAssetPriceHistory({
                             assetId: asset.id,
                             date: quoteDate,
@@ -523,5 +529,5 @@ export const updateMarketData = async () => {
                 console.error(`Error fetching market data for asset ${asset.symbol}:`, err);
             });
         }
-    }
+    });
 }

@@ -32,3 +32,13 @@ export async function fetchQuoteSummary(symbol: string) {
         throw error;
     }
 }
+
+export async function fetchQuoteCombined(symbol: string) {
+    try {
+        const combined = await yf.quoteCombine(symbol);
+        return combined;
+    } catch (error) {
+        console.error('Error fetching quote combined data:', error);
+        throw error;
+    }
+}
