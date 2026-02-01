@@ -5,6 +5,7 @@
 	import { DatePicker, Pagination, Portal } from '@skeletonlabs/skeleton-svelte';
 	import { ArrowLeftIcon, ArrowRightIcon } from '@lucide/svelte';
 	import { asset } from '$app/paths';
+	import CandleChart from '$lib/components/CandleChart.svelte';
 
 	let { data, form } = $props();
     let dateRange = $state<any[]>([]);
@@ -26,6 +27,8 @@
 			<p class="mb-1"><strong>Category:</strong> {data.asset.category.name}</p>
 			<p class="mb-1"><strong>Description:</strong> {data.asset.category.description}</p>
 		</div>
+		
+  		<CandleChart data={data.asset.priceHistory} currency={data.asset.currency} />
 
 		<DatePicker selectionMode="range" onValueChange={(e) => dateRange = e.value}>
 	<DatePicker.Label>Select Date Range</DatePicker.Label>
@@ -135,6 +138,13 @@
 			</button>
 		</form>
 
+		<form method="POST" action="?/fetchHistory" use:enhance class="mt-4 flex flex-col gap-2 items-start">
+			<input type="hidden" name="startDate" value={new Date(new Date().setFullYear(new Date().getFullYear() -1)).toISOString()} />
+			<input type="hidden" name="endDate" value={new Date().toISOString()} />
+			<button type="submit" class="btn preset-filled-primary-500">
+				Fetch History Past Year
+			</button>
+		</form>
 		{#if form?.success && form?.count}
 			<div class="mt-4 p-4 border rounded-base bg-surface-500/5">
 				<h3 class="font-semibold mb-2">Historical Data Fetched</h3>
