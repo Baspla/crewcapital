@@ -60,7 +60,7 @@
 				type: 'value',
 				min: minPrice,
 				max: maxPrice,
-				interval: priceRange === 0 ? 1 : priceRange,
+				interval: priceRange ,
 				show: true,
 				axisLine: { show: false },
 				axisTick: { show: false },
