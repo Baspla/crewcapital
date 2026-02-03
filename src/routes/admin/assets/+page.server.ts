@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { createAsset, getCurrencies, getAssetCategories, getAssetsPaginated, updateAssetHistory, getAssetBySymbol } from '$lib/server/db/actions';
-import { fetchHistoricalData, fetchStockQuote } from '$lib/server/yahoo/finance';
 import type { Actions, PageServerLoad } from './$types';
+import { fetchRealTimeData } from '$lib/server/yahoo/finance';
 
 export const actions: Actions = {
     refreshHistory: async ({ request }) => {
@@ -30,7 +30,7 @@ export const actions: Actions = {
         }
 
         try {
-            const quote = await fetchStockQuote(symbol);
+            const quote = await fetchRealTimeData(symbol);
 
             if (!quote) {
                 return fail(404, { symbol, notFound: true });

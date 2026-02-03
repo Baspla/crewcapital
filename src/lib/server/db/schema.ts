@@ -95,7 +95,7 @@ export const assetPriceHistory = sqliteTable('asset_price_history', {
 	open: real('open'),
 	high: real('high'),
 	low: real('low'),
-	close: real('close').notNull(),
+	close: real('close'),
 	volume: integer('volume')
 });
 

@@ -1,7 +1,8 @@
 import { eq, and, desc, asc, inArray, count, gte, lte, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import { db } from './index';
 import * as schema from './schema';
-import { fetchQuoteCombined, fetchStockQuote, fetchHistoricalData } from '../yahoo/finance';
+import { fetchHistoricalData, fetchRealTimeData } from '../yahoo/finance';
+import type { ChartResultArray, ChartResultArrayQuote } from 'yahoo-finance2/modules/chart';
 
 // --- Users ---
 export const getUsers = async () => {
@@ -77,7 +78,7 @@ export const getAssets = async () => {
     });
 };
 
-export const getAssetsPaginated = async (page: number = 1, pageSize: number = 10,startingDateHistory?: Date) => {
+export const getAssetsPaginated = async (page: number = 1, pageSize: number = 10, startingDateHistory?: Date) => {
     const offset = (page - 1) * pageSize;
     const [assets, totalResult] = await Promise.all([
         db.query.asset.findMany({
@@ -96,7 +97,7 @@ export const getAssetsPaginated = async (page: number = 1, pageSize: number = 10
         }),
         db.select({ count: count() }).from(schema.asset)
     ]);
-    
+
     return {
         assets,
         totalCount: totalResult[0]?.count ?? 0
@@ -186,25 +187,26 @@ export const updateAssetHistory = async (assetId: string, startDate?: string | D
 
     const startStr = start.toISOString().split('T')[0];
     const endStr = end.toISOString().split('T')[0];
-    
+
     // Safety check if start > end ?
     if (start > end) {
         throw new Error("Start date cannot be after end date");
     }
 
     console.log(`Fetching history for ${asset.symbol} from ${startStr} to ${endStr}`);
-    
-    try {
-        const data = await fetchHistoricalData(asset.symbol, startStr, endStr);
 
-        if (data.length > 0) {
-            const dates = data.map(d => new Date(d.date).getTime());
+    try {
+        const data: ChartResultArray = await fetchHistoricalData(asset.symbol, startStr, endStr);
+        const quotes: ChartResultArrayQuote[] = data.quotes
+
+        if (quotes.length > 0) {
+            const dates = quotes.map(d => new Date(d.date).getTime());
             const minDate = new Date(Math.min(...dates));
             const maxDate = new Date(Math.max(...dates));
 
             await deleteAssetPriceHistoryInRange(asset.id, minDate, maxDate);
-            
-            const historyRecords = data.map(item => ({
+
+            const historyRecords = quotes.map(item => ({
                 assetId: asset.id,
                 date: new Date(item.date),
                 open: item.open,
@@ -215,7 +217,7 @@ export const updateAssetHistory = async (assetId: string, startDate?: string | D
             }));
 
             await bulkAddAssetPriceHistory(historyRecords);
-            return { success: true, count: data.length, symbol: asset.symbol };
+            return { success: true, count: quotes.length, symbol: asset.symbol };
         }
         return { success: true, count: 0, symbol: asset.symbol };
 
@@ -543,10 +545,10 @@ export const ensureAssetCategories = async () => {
 
 export const ensureCurrencyConversions = async () => {
     const pairs = [
-        { fromCurrencyId: 'EUR', toCurrencyId: 'USD' , symbol: 'EURUSD=X' },
-        { fromCurrencyId: 'USD', toCurrencyId: 'EUR' , symbol: 'USDEUR=X' },
-        { fromCurrencyId: 'EUR', toCurrencyId: 'GCN' , symbol: 'EURGCN', staticConversionRate: 1 },
-        { fromCurrencyId: 'GCN', toCurrencyId: 'EUR' , symbol: 'GNCEUR', staticConversionRate: 1 },
+        { fromCurrencyId: 'EUR', toCurrencyId: 'USD', symbol: 'EURUSD=X' },
+        { fromCurrencyId: 'USD', toCurrencyId: 'EUR', symbol: 'USDEUR=X' },
+        { fromCurrencyId: 'EUR', toCurrencyId: 'GCN', symbol: 'EURGCN', staticConversionRate: 1 },
+        { fromCurrencyId: 'GCN', toCurrencyId: 'EUR', symbol: 'GNCEUR', staticConversionRate: 1 },
     ];
     for (const pair of pairs) {
         const existing = await db.query.exchangePair.findFirst({
@@ -564,9 +566,10 @@ export const ensureCurrencyConversions = async () => {
 
 export const updateMarketData = async () => {
     const assets = await getAssets();
+    console.log(`Updating market data for ${assets.length} assets...`);
     assets.forEach(async (asset) => {
         if (asset.symbol) {
-            fetchQuoteCombined(asset.symbol).then(async (quote) => {
+            fetchRealTimeData(asset.symbol).then(async (quote) => {
                 if (quote && quote.regularMarketPrice) {
                     const quoteDate = quote.regularMarketTime ? new Date(quote.regularMarketTime) : new Date();
 
@@ -588,6 +591,8 @@ export const updateMarketData = async () => {
                             volume: quote.regularMarketVolume ?? undefined
                         });
                         console.log(`Updated market price for asset ${asset.symbol} to ${quote.regularMarketPrice} at ${quoteDate.toISOString()} (${quote.regularMarketTime})`);
+                    } else {
+                        console.log(`Market data for asset ${asset.symbol} at ${quoteDate.toISOString()} already exists. Skipping.`);
                     }
                 }
             }).catch((err) => {
