@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import { createAsset, getCurrencies, getAssetCategories, getAssets } from '$lib/server/db/actions';
-import { fetchStockQuote } from '$lib/server/yahoo/finance';
+import { fetchStockQuote } from '$lib/server/finance/yahooapi';
 import type { Actions } from './$types';
 
 export const actions: Actions = {

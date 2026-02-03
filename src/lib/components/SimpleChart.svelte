@@ -4,7 +4,7 @@
 	interface Props {
 		data: {
 			open: number | null;
-			close: number;
+			close: number | null;
 			date: Date;
 			id: string;
 			assetId: string;
@@ -35,7 +35,7 @@
 		const endPrice = sortedData[sortedData.length - 1]?.close ?? 0;
 		const chartColor = endPrice >= startPrice ? '#22c55e' : '#ef4444';
 
-		const prices = sortedData.map((d) => d.close);
+		const prices = sortedData.map((d) => d.close).filter((p): p is number => p !== null);
 		const minPrice = Math.min(...prices);
 		const maxPrice = Math.max(...prices);
 		const priceRange = maxPrice - minPrice;
@@ -75,7 +75,7 @@
 			},
 			series: [
 				{
-					data: sortedData.map((item) => item.close),
+					data: sortedData.map((item) => item.close).filter((p): p is number => p !== null),
 					type: 'line',
 					smooth: true,
 					symbol: 'none',

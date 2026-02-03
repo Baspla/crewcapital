@@ -1,4 +1,4 @@
-import { getAssetsPaginated } from '$lib/server/db/actions';
+import { getAssetPriceHistory, getAssetsPaginated } from '$lib/server/db/actions';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -9,10 +9,14 @@ export const load: PageServerLoad = async (event) => {
     const safePage = Math.max(1, page);
     const safePageSize = Math.max(1, Math.min(100, pageSize));
 
-    const { assets, totalCount } = await getAssetsPaginated(safePage, safePageSize, new Date(Date.now() - 30*24*60*60*1000)); // last 30 days
+    const { assets, totalCount } = await getAssetsPaginated(safePage, safePageSize);
+    const pairs = await Promise.all(assets.map(async (asset) => ({
+        asset,
+        priceHistory: await getAssetPriceHistory(asset.id)
+    })));
     
     return { 
-        assets,
+        assetPriceHistoryPairs: pairs,
         totalCount,
         page: safePage,
         pageSize: safePageSize

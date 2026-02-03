@@ -6,7 +6,7 @@ import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
-import { ensureUserPortfolio, upsertUser } from '$lib/server/db/actions';
+import { assertUserPortfolio, upsertUser } from '$lib/server/db/actions';
 
 /**
  * Debug user configuration for development mode.
@@ -90,7 +90,7 @@ const HeaderProvider = Credentials({
 			active: true
 		});
 			
-		await ensureUserPortfolio(dbUser.id);
+		await assertUserPortfolio(dbUser.id);
 
 		return {
 			id: dbUser.id,
@@ -172,7 +172,7 @@ export const proxyAuthHandle: Handle = async ({ event, resolve }) => {
 			active: true
 		});
 
-		await ensureUserPortfolio(dbUser.id);
+		await assertUserPortfolio(dbUser.id);
 		// Set user in locals for access in routes
 		event.locals.user = {
 			id: dbUser.id,

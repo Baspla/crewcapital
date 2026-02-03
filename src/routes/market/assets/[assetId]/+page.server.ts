@@ -1,4 +1,4 @@
-import { getAssetById, getUserAssetTransactions } from "$lib/server/db/actions";
+import { getAssetById, getAssetPriceHistory, getUserAssetTransactions } from "$lib/server/db/actions";
 import { requireAuth } from "$lib/server/guards";
 import type { PageServerLoad } from "../../$types";
 
@@ -15,12 +15,14 @@ export const load: PageServerLoad = async (event) => {
     const safePageSize = Math.max(1, Math.min(100, pageSize));
 
     const { transactions, totalCount } = await getUserAssetTransactions(user.id, assetId, safePage, safePageSize);
+    const assetPriceHistory = await getAssetPriceHistory(assetId);
 
     return {
         asset,
         transactions,
         totalCount,
         page: safePage,
-        pageSize: safePageSize
+        pageSize: safePageSize,
+        assetPriceHistory
     };
 }

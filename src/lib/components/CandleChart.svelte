@@ -4,7 +4,7 @@
 	interface Props {
 		data: {
 			open: number | null;
-			close: number;
+			close: number | null;
 			date: Date;
 			id: string;
 			assetId: string;
@@ -44,9 +44,14 @@
 				formatter: (params: any) => {
 					const param = Array.isArray(params) ? params[0] : params;
 					if (!param || !param.data) return '';
-					const [index, open, close, low, high] = param.data;
+					// data format: [date, open, close, low, high]
+					const [date, open, close, low, high] = param.data;
+					const dateStr = date instanceof Date 
+						? date.toLocaleString() 
+						: new Date(date).toLocaleString();
+
 					return `
-						${param.axisValue}<br/>
+						${dateStr}<br/>
 						${param.marker} Open: <b>${formatCurrency(open, currency)}</b><br/>
 						${param.marker} Close: <b>${formatCurrency(close, currency)}</b><br/>
 						${param.marker} Low: <b>${formatCurrency(low, currency)}</b><br/>
@@ -56,8 +61,7 @@
 			},
 			grid: { left: '10%', right: '10%', bottom: '15%' },
 			xAxis: {
-				type: 'category',
-				data: sortedData.map((item) => item.date.toISOString().split('T')[0]),
+				type: 'time',
 				axisLabel: { color: isDark ? '#9ca3af' : '#4b5563' }
 			},
 			yAxis: {
@@ -72,7 +76,7 @@
 			series: [
 				{
 					type: 'candlestick',
-					data: sortedData.map((item) => [item.open, item.close, item.low, item.high]),
+					data: sortedData.map((item) => [item.date, item.open, item.close, item.low, item.high]),
 					itemStyle: {
 						color: '#26a69a', // Bullish color (Green)
 						color0: '#ef5350', // Bearish color (Red)

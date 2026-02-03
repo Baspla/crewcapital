@@ -1,7 +1,8 @@
 import { eq, and, desc, asc, inArray, count, gte, lte, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import { db } from './index';
 import * as schema from './schema';
-import { fetchHistoricalData, fetchRealTimeData } from '../yahoo/finance';
+import { fetchHistoricalData, fetchRealTimeData } from '../finance/yahooapi';
+import { largestTriangleThreeBuckets } from '../finance/algorithms';
 import type { ChartResultArray, ChartResultArrayQuote } from 'yahoo-finance2/modules/chart';
 
 // --- Users ---
@@ -78,18 +79,13 @@ export const getAssets = async () => {
     });
 };
 
-export const getAssetsPaginated = async (page: number = 1, pageSize: number = 10, startingDateHistory?: Date) => {
+export const getAssetsPaginated = async (page: number = 1, pageSize: number = 10) => {
     const offset = (page - 1) * pageSize;
     const [assets, totalResult] = await Promise.all([
         db.query.asset.findMany({
             with: {
                 category: true,
-                currency: true,
-                priceHistory: {
-                    orderBy: [desc(schema.assetPriceHistory.date)],
-                    where: startingDateHistory ? gte(schema.assetPriceHistory.date, startingDateHistory) : undefined,
-                    limit: 200
-                }
+                currency: true
             },
             limit: pageSize,
             offset: offset,
@@ -109,25 +105,18 @@ export const getAssetById = async (id: string) => {
         where: eq(schema.asset.id, id),
         with: {
             category: true,
-            currency: true,
-            priceHistory: {
-                orderBy: [desc(schema.assetPriceHistory.date)],
-                limit: 500
-            }
+            currency: true
         }
     });
 };
+
 
 export const getAssetBySymbol = async (symbol: string) => {
     return await db.query.asset.findFirst({
         where: eq(schema.asset.symbol, symbol),
         with: {
             category: true,
-            currency: true,
-            priceHistory: {
-                orderBy: [desc(schema.assetPriceHistory.date)],
-                limit: 500
-            }
+            currency: true
         }
     });
 };
@@ -154,12 +143,37 @@ export const bulkAddAssetPriceHistory = async (data: InferInsertModel<typeof sch
     return await db.insert(schema.assetPriceHistory).values(data).returning();
 };
 
-export const getAssetPriceHistory = async (assetId: string, limit: number = 30) => {
-    return await db.query.assetPriceHistory.findMany({
-        where: eq(schema.assetPriceHistory.assetId, assetId),
-        orderBy: [desc(schema.assetPriceHistory.date)],
-        limit
+export const getAssetPriceHistory = async (assetId: string, startDate?: Date, endDate?: Date, limit: number = 300) => {
+    const conditions = [eq(schema.assetPriceHistory.assetId, assetId)];
+
+    if (startDate) {
+        conditions.push(gte(schema.assetPriceHistory.date, startDate));
+    }
+
+    if (endDate) {
+        conditions.push(lte(schema.assetPriceHistory.date, endDate));
+    }
+
+    const data = await db.query.assetPriceHistory.findMany({
+        where: and(...conditions),
+        orderBy: [asc(schema.assetPriceHistory.date)]
     });
+
+    if (data.length <= limit) {
+        return data;
+    }
+
+    return largestTriangleThreeBuckets(data, limit);
+};
+
+export const existsAssetPriceHistory = async (assetId: string, date: Date) => {
+    const existing = await db.query.assetPriceHistory.findFirst({
+        where: and(
+            eq(schema.assetPriceHistory.assetId, assetId),
+            eq(schema.assetPriceHistory.date, date)
+        )
+    });
+    return existing !== undefined;
 };
 
 export const deleteAssetPriceHistoryInRange = async (assetId: string, startDate: Date, endDate: Date) => {
@@ -429,7 +443,7 @@ export const getExchangeRateHistory = async (pairId: string, limit: number = 30)
  * Ensures that EUR and USD as well as GCN exist in the currencies table.
  * If they don't exist, they are created.
  */
-export const ensureBaseCurrencies = async () => {
+export const assertBaseCurrencies = async () => {
     // Try to find EUR and USD
     const existingCurrencies = await db.query.currency.findMany({
         where: inArray(schema.currency.id, ['EUR', 'USD', 'GCN'])
@@ -480,9 +494,7 @@ export const ensureBaseCurrencies = async () => {
  * Creates a portfolio for a user if they don't have one,
  * and credits a starting gift of 100,000 EUR.
  */
-export const ensureUserPortfolio = async (userId: string) => {
-    // Ensure currencies exist before transaction
-    await ensureBaseCurrencies();
+export const assertUserPortfolio = async (userId: string) => {
 
     const existingPortfolio = await db.query.portfolio.findFirst({
         where: eq(schema.portfolio.userId, userId)
@@ -526,7 +538,7 @@ export const ensureUserPortfolio = async (userId: string) => {
     });
 };
 
-export const ensureAssetCategories = async () => {
+export const assertAssetCategories = async () => {
     const categories = [
         { id: 'equity', name: 'Equity' },
         { id: 'etf', name: 'ETF' },
@@ -543,7 +555,7 @@ export const ensureAssetCategories = async () => {
     }
 };
 
-export const ensureCurrencyConversions = async () => {
+export const assertCurrencyConversions = async () => {
     const pairs = [
         { fromCurrencyId: 'EUR', toCurrencyId: 'USD', symbol: 'EURUSD=X' },
         { fromCurrencyId: 'USD', toCurrencyId: 'EUR', symbol: 'USDEUR=X' },
@@ -563,41 +575,3 @@ export const ensureCurrencyConversions = async () => {
         }
     }
 };
-
-export const updateMarketData = async () => {
-    const assets = await getAssets();
-    console.log(`Updating market data for ${assets.length} assets...`);
-    assets.forEach(async (asset) => {
-        if (asset.symbol) {
-            fetchRealTimeData(asset.symbol).then(async (quote) => {
-                if (quote && quote.regularMarketPrice) {
-                    const quoteDate = quote.regularMarketTime ? new Date(quote.regularMarketTime) : new Date();
-
-                    const existing = await db.query.assetPriceHistory.findFirst({
-                        where: and(
-                            eq(schema.assetPriceHistory.assetId, asset.id),
-                            eq(schema.assetPriceHistory.date, quoteDate)
-                        )
-                    });
-
-                    if (!existing) {
-                        addAssetPriceHistory({
-                            assetId: asset.id,
-                            date: quoteDate,
-                            open: quote.regularMarketOpen ?? undefined,
-                            high: quote.regularMarketDayHigh ?? undefined,
-                            low: quote.regularMarketDayLow ?? undefined,
-                            close: quote.regularMarketPrice,
-                            volume: quote.regularMarketVolume ?? undefined
-                        });
-                        console.log(`Updated market price for asset ${asset.symbol} to ${quote.regularMarketPrice} at ${quoteDate.toISOString()} (${quote.regularMarketTime})`);
-                    } else {
-                        console.log(`Market data for asset ${asset.symbol} at ${quoteDate.toISOString()} already exists. Skipping.`);
-                    }
-                }
-            }).catch((err) => {
-                console.error(`Error fetching market data for asset ${asset.symbol}:`, err);
-            });
-        }
-    });
-}

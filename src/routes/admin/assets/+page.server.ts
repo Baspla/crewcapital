@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { createAsset, getCurrencies, getAssetCategories, getAssetsPaginated, updateAssetHistory, getAssetBySymbol } from '$lib/server/db/actions';
 import type { Actions, PageServerLoad } from './$types';
-import { fetchRealTimeData } from '$lib/server/yahoo/finance';
+import { fetchRealTimeData } from '$lib/server/finance/yahooapi';
 
 export const actions: Actions = {
     refreshHistory: async ({ request }) => {

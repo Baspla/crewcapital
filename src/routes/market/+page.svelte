@@ -30,25 +30,25 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each data.assets as asset (asset.id)}
+			{#each data.assetPriceHistoryPairs as pair (pair.asset.id)}
 				<tr class="hover:bg-surface-500/10">
 					<td class="px-4 py-2">
-						<AssetIcon asset={asset} class="size-6" shape="rounded" />
+						<AssetIcon asset={pair.asset} class="size-6" shape="rounded" />
 					</td>
 					<td class="px-4 py-2 font-mono font-bold">
-						<a href={`/market/assets/${asset.id}`}>{asset.symbol} </a></td
+						<a href={`/market/assets/${pair.asset.id}`}>{pair.asset.symbol} </a></td
 					>
 					<td class="px-4 py-2">
-							<a href={`/market/assets/${asset.id}`}>{asset.name}</a>
+							<a href={`/market/assets/${pair.asset.id}`}>{pair.asset.name}</a>
 					</td>
 					<td class="px-4 py-2">
 						<SimpleChart
-							data={asset.priceHistory}
+							data={pair.priceHistory}
 							height="50px"
-							currency={asset.currency}
+							currency={pair.asset.currency}
 						/>
 					</td>
-					<td class="px-4 py-2 capitalize">{asset.category.name}</td>
+					<td class="px-4 py-2 capitalize">{pair.asset.category.name}</td>
 				</tr>
 			{/each}
 		</tbody>
