@@ -2,6 +2,9 @@ import { addAssetPriceHistory, existsAssetPriceHistory, getAssets } from "../db/
 import { fetchRealTimeData } from "./yahooapi";
 
 export const updateMarketData = async () => {
+    console.log('Market data update disabled.');
+    return;
+    // Disabled for now
     const assets = await getAssets();
     console.log(`Updating market data for ${assets.length} assets...`);
     assets.forEach(async (asset) => {

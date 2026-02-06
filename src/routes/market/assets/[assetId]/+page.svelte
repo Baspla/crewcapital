@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { Pagination } from '@skeletonlabs/skeleton-svelte';
 	import { ArrowLeftIcon, ArrowRightIcon } from '@lucide/svelte';
-  	import CandleChart from '$lib/components/CandleChart.svelte';
+  	import CandleChart from '$lib/components/charts/CandleChart.svelte';
 	import AssetIcon from '$lib/components/AssetIcon.svelte';
 
 	let { data } = $props();

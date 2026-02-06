@@ -4,7 +4,6 @@ import { handle as authHandle, proxyAuthHandle } from '$lib/server/auth';
 import { building } from '$app/environment';
 import { assertBaseCurrencies, assertAssetCategories, assertCurrencyConversions } from '$lib/server/db/actions';
 import { updateMarketData } from '$lib/server/finance/financeUtils';
-
 // Combine Auth.js handle with proxy auth middleware
 export const handle = sequence(authHandle, proxyAuthHandle);
 

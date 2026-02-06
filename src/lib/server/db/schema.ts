@@ -196,9 +196,9 @@ export const transaction = sqliteTable('transaction', {
 		.references(() => portfolio.id, { onDelete: 'cascade' }),
 	assetId: text('asset_id').references(() => asset.id), // Nullable for non-asset transactions
 	type: text('type', {
-		enum: ['buy', 'sell', 'deposit', 'withdrawal','sent','received', 'gift', 'fee', 'currency_conversion', 'prediction_cost', 'prediction_win', 'prediction_loss', 'prediction_reimbursement']
+		enum: ['buy', 'sell', 'deposit', 'withdrawal','sent','received', 'gift', 'fee', 'currency_conversion', 'prediction_cost', 'prediction_win', 'prediction_draw', 'prediction_reimbursement', 'prediction_sale']
 	}).notNull(),
-	amount: real('amount'), // Quantity of asset
+	amountOfUnits: real('amount_of_units'), // Quantity of asset
 	pricePerUnit: real('price_per_unit'),
 	totalValue: real('total_value'), // value in toCurrency
 	fee: real('fee').default(0),
@@ -338,7 +338,28 @@ export const predictionMarketRelations = relations(predictionMarket, ({ one, man
 		references: [asset.id]
 	}),
 	shares: many(predictionMarketShare),
-	transactions: many(transaction)
+	transactions: many(transaction),
+	history: many(predictionMarketHistory)
+}));
+
+export const predictionMarketHistory = sqliteTable('prediction_market_history', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	predictionMarketId: text('prediction_market_id')
+		.notNull()
+		.references(() => predictionMarket.id),
+	date: integer('date', { mode: 'timestamp' }).notNull(),
+	yesPool: real('yes_pool').notNull(),
+	noPool: real('no_pool').notNull(),
+	probability: real('probability').notNull() // Probability of "yes" outcome at this point in time, for easy querying without calculating on the fly
+});
+
+export const predictionMarketHistoryRelations = relations(predictionMarketHistory, ({ one }) => ({
+	predictionMarket: one(predictionMarket, {
+		fields: [predictionMarketHistory.predictionMarketId],
+		references: [predictionMarket.id]
+	})
 }));
 
 export const predictionMarketShare = sqliteTable('prediction_market_share', {

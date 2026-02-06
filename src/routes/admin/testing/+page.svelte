@@ -1,6 +1,6 @@
 <script lang="ts">
   import WorkInProgress from '$lib/components/WorkInProgress.svelte';
-	import CandleChart from '$lib/components/CandleChart.svelte';
+	import CandleChart from '$lib/components/charts/CandleChart.svelte';
 
   let { form } = $props();
 </script>

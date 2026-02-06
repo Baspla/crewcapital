@@ -6,7 +6,7 @@
 	import { Pagination } from '@skeletonlabs/skeleton-svelte';
 	import { ArrowLeftIcon, ArrowRightIcon, RefreshCwIcon } from '@lucide/svelte';
 	import AssetIcon from '$lib/components/AssetIcon.svelte';
-	import SimpleChart from '$lib/components/SimpleChart.svelte';
+	import SimpleChart from '$lib/components/charts/SimpleChart.svelte';
 
 	let { form, data } = $props();
 

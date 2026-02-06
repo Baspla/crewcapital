@@ -4,8 +4,7 @@
 	import { enhance } from '$app/forms';
 	import { DatePicker, Pagination, Portal } from '@skeletonlabs/skeleton-svelte';
 	import { ArrowLeftIcon, ArrowRightIcon } from '@lucide/svelte';
-	import { asset } from '$app/paths';
-	import CandleChart from '$lib/components/CandleChart.svelte';
+	import CandleChart from '$lib/components/charts/CandleChart.svelte';
 
 	let { data, form } = $props();
     let dateRange = $state<any[]>([]);
@@ -28,7 +27,7 @@
 			<p class="mb-1"><strong>Description:</strong> {data.asset.category.description}</p>
 		</div>
 		
-  		<CandleChart data={data.asset.priceHistory} currency={data.asset.currency} />
+  		<CandleChart data={data.assetPriceHistory} currency={data.asset.currency} />
 
 		<DatePicker selectionMode="range" onValueChange={(e) => dateRange = e.value}>
 	<DatePicker.Label>Select Date Range</DatePicker.Label>
