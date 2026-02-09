@@ -47,7 +47,7 @@
 								<div class="chip preset-filled-primary-500">{transaction.type}</div>
 							{/if}
 						</td>
-						<td class="px-4 py-2">{transaction.amount}</td>
+						<td class="px-4 py-2">{transaction.totalValue}</td>
 						<td class="px-4 py-2">{transaction.pricePerUnit}</td>
 					</tr>
 				{/each}
