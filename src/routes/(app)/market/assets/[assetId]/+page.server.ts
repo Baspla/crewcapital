@@ -1,9 +1,8 @@
 import { getAssetById, getAssetPriceHistory, getUserAssetTransactions } from "$lib/server/db/actions";
-import { requireAuth } from "$lib/server/guards";
 import type { PageServerLoad } from "../../$types";
 
 export const load: PageServerLoad = async (event) => {
-    const user = requireAuth(event);
+    const user = (await event.parent()).user;
     // @ts-ignore - The slug parameter is correctly typed in SvelteKit, but is not recognized by TypeScript here.
     const assetId: string = event.params.assetId;
     const asset = await getAssetById(assetId);

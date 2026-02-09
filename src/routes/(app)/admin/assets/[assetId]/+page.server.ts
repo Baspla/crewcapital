@@ -1,9 +1,8 @@
 import { getAssetById, getAssetPriceHistory, getUserAssetTransactions, updateAssetHistory } from "$lib/server/db/actions";
-import { requireAuth } from "$lib/server/guards";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async (event) => {
-    const user = requireAuth(event);
+    const user = (await event.parent()).user;
     // @ts-ignore - The slug parameter is correctly typed in SvelteKit, but is not recognized by TypeScript here.
     const assetId: string = event.params.assetId;
     const asset = await getAssetById(assetId);
@@ -15,8 +14,8 @@ export const load: PageServerLoad = async (event) => {
     const safePageSize = Math.max(1, Math.min(100, pageSize));
 
     const { transactions, totalCount } = await getUserAssetTransactions(user.id, assetId, safePage, safePageSize);
-    
-        const assetPriceHistory = await getAssetPriceHistory(assetId);
+
+    const assetPriceHistory = await getAssetPriceHistory(assetId);
 
     return {
         asset,
@@ -33,7 +32,7 @@ export const actions: Actions = {
         const formData = await request.formData();
         const startDate = formData.get('startDate') as string;
         const endDate = formData.get('endDate') as string;
-        
+
         // @ts-ignore
         const assetId = params.assetId;
 
@@ -42,7 +41,7 @@ export const actions: Actions = {
             return { success: true, count: result.count };
         } catch (e: any) {
             console.error(e);
-             return { success: false, error: e.message || "Failed to fetch data" };
+            return { success: false, error: e.message || "Failed to fetch data" };
         }
     }
 };
