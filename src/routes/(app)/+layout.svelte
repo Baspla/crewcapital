@@ -11,13 +11,15 @@
 		HistoryIcon,
 		PaletteIcon,
 		HammerIcon,
-		LogOutIcon
+		LogOutIcon,
+
+		HandCoinsIcon
+
 	} from '@lucide/svelte';
 	import { Menu, Navigation, Portal } from '@skeletonlabs/skeleton-svelte';
 	import { page } from '$app/state';
 	import LogoutButton from '$lib/components/auth/LogoutButton.svelte';
 	import type { LayoutProps } from './$types';
-	import Toaster from '$lib/components/Toaster.svelte';
 
 	let { data, children }: LayoutProps = $props();
 
@@ -25,7 +27,7 @@
 		{ label: 'Dashboard', href: '/', icon: LayoutDashboardIcon },
 		{ label: 'Market', href: '/market', icon: TrendingUpDownIcon },
 		{ label: 'Predictions', href: '/predictions', icon: TicketsIcon },
-		{ label: 'Portfolios', href: '/portfolios', icon: BriefcaseBusinessIcon },
+		{ label: 'Currencies', href: '/currencies', icon: HandCoinsIcon },
 		{ label: 'Transactions', href: '/transactions', icon: HistoryIcon },
 		{ label: 'Leaderboard', href: '/leaderboard', icon: CrownIcon }
 	];

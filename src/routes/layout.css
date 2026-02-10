@@ -12,6 +12,8 @@
 @import '@skeletonlabs/skeleton/themes/nouveau';
 @import '@skeletonlabs/skeleton/themes/rose';
 @import '@skeletonlabs/skeleton/themes/terminus';
+@import '@skeletonlabs/skeleton/themes/wintry';
+@import '@skeletonlabs/skeleton/themes/fennec';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -27,7 +29,9 @@ html {
 [data-theme=mona],
 [data-theme=nosh],
 [data-theme=pine],
-[data-theme=rose]) body {
+[data-theme=rose]
+[data-theme=wintry],
+[data-theme=fennec]) body {
   background-image:radial-gradient(at 0 25%,#7373731a 0,#0000 30%),radial-gradient(at 15% 6%,#7373730d 0,#0000 30%);
   background-attachment:fixed
 }
@@ -40,7 +44,9 @@ html {
 [data-theme=mona],
 [data-theme=nosh],
 [data-theme=pine],
-[data-theme=rose]) body {
+[data-theme=rose],
+[data-theme=wintry],
+[data-theme=fennec]) body {
     background-image:radial-gradient(at 0% 25%,color-mix(in oklab,var(--color-primary-500)10%,transparent)0px,transparent 30%),radial-gradient(at 15% 6%,color-mix(in oklab,var(--color-success-500)5%,transparent)0px,transparent 30%);
   }
 }

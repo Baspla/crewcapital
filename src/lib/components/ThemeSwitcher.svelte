@@ -19,7 +19,9 @@
 		{ id: 'crimson', name: 'Crimson', icon: '🩸' },
 		{ id: 'nosh', name: 'Nosh', icon: '🍽️' },
 		{ id: 'nouveau', name: 'Nouveau', icon: '🎨' },
-		{ id: 'terminus', name: 'Terminus', icon: '🚉' }
+		{ id: 'terminus', name: 'Terminus', icon: '🚉' },
+		{ id: 'wintry', name: 'Wintry', icon: '❄️' },
+		{ id: 'fennec', name: 'Fennec', icon: '🦊' },
 	];
 
 	// State for the currently active theme
