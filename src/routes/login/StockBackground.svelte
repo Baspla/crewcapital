@@ -105,7 +105,7 @@
 	});
 </script>
 
-<div class="fixed inset-0 z-0 pointer-events-none select-none overflow-hidden bg-zinc-50 dark:bg-zinc-950"
+<div class="fixed inset-0 -z-10 pointer-events-none select-none overflow-hidden bg-zinc-50 dark:bg-zinc-950"
 	bind:clientWidth={width}
 	bind:clientHeight={height}
 	aria-hidden="true"

@@ -11,11 +11,11 @@
 
 <StockBackground />
 
-<div class="relative z-10 flex h-screen w-screen flex-col items-center justify-center gap-4">
+<div class="relative flex h-screen w-screen flex-col items-center justify-center gap-4">
 	<h1 class="h1">Welcome to Crew Capital</h1>
 	<LoginButton {callbackURL} />
 </div>
-<div class="absolute bottom-4 left-4 z-10">
+<div class="absolute bottom-4 left-4">
 	<ThemeSwitcher>
 		<PaletteIcon class="size-5" />
 	</ThemeSwitcher>
