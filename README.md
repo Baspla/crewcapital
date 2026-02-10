@@ -15,7 +15,7 @@ To recreate this project with the same configuration:
 
 ```sh
 # recreate this project
-pnpm dlx sv create --template minimal --types ts --add tailwindcss="plugins:typography" sveltekit-adapter="adapter:auto" drizzle="database:sqlite+sqlite:better-sqlite3" mcp="ide:vscode+setup:local" prettier --install pnpm gnagex
+pnpm dlx sv create --template minimal --types ts --add tailwindcss="plugins:typography" sveltekit-adapter="adapter:auto" drizzle="database:sqlite+sqlite:better-sqlite3" mcp="ide:vscode+setup:local" prettier --install pnpm crewcapital
 ```
 
 ## Developing

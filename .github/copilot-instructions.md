@@ -1,4 +1,4 @@
-# GitHub Copilot Instructions for `gnagex`
+# GitHub Copilot Instructions for `crewcapital`
 
 ## Project Architecture & Tech Stack
 
