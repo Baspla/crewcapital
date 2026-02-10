@@ -1,6 +1,6 @@
 import { db } from './index';
-import { assetPriceHistory, exchangeRateHistory } from './schema';
 import { lt, eq, and, inArray } from 'drizzle-orm';
+import { assetPriceHistory, exchangeRateHistory } from './schema';
 
 /**
  * Consolidates historical asset price data into daily candles.
@@ -60,13 +60,13 @@ export const consolidateAssetHistory = async (olderThanDays: number) => {
             const consolidatedDate = new Date(`${day}T00:00:00.000Z`);
 
             // 4. Transaction: Delete old records and insert new one
-            db.transaction((tx) => {
+            await db.transaction(async (tx) => {
                 const idsToDelete = records.map(r => r.id);
                 // Chunk deletions if too many (SQLite limit), though unlikely for one day of minute data (1440 rows)
-                tx.delete(assetPriceHistory)
-                    .where(inArray(assetPriceHistory.id, idsToDelete)).run();
+                await tx.delete(assetPriceHistory)
+                    .where(inArray(assetPriceHistory.id, idsToDelete));
                 
-                tx.insert(assetPriceHistory).values({
+                await tx.insert(assetPriceHistory).values({
                     assetId: asset.id,
                     date: consolidatedDate,
                     open,
@@ -74,7 +74,7 @@ export const consolidateAssetHistory = async (olderThanDays: number) => {
                     low,
                     close,
                     volume
-                }).run();
+                });
             });
 
             totalConsolidated += records.length;
@@ -126,16 +126,16 @@ export const consolidateExchangeRateHistory = async (olderThanDays: number) => {
             const lastRecord = records[records.length - 1];
             const date = new Date(`${day}T00:00:00.000Z`);
 
-            db.transaction((tx) => {
+            await db.transaction(async (tx) => {
                 const idsToDelete = records.map(r => r.id);
-                tx.delete(exchangeRateHistory)
-                    .where(inArray(exchangeRateHistory.id, idsToDelete)).run();
+                await tx.delete(exchangeRateHistory)
+                    .where(inArray(exchangeRateHistory.id, idsToDelete));
                 
-                tx.insert(exchangeRateHistory).values({
+                await tx.insert(exchangeRateHistory).values({
                     pairId: pair.id,
                     date: date,
                     rate: lastRecord.rate
-                }).run();
+                });
             });
 
             totalConsolidated += records.length;

@@ -1,15 +1,11 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from './schema';
 import { env } from '$env/dynamic/private';
 import { building } from '$app/environment';
 
-const client = new Database(building ? ':memory:' : (env.DATABASE_URL ?? 'local.db'));
-client.pragma('foreign_keys = ON');
+if (!env.DATABASE_URL && !building) throw new Error('DATABASE_URL is not set');
 
-export const db = drizzle(client, { schema, logger: false });
+const client = postgres(env.DATABASE_URL || 'postgres://localhost:5432/postgres');
+export const db = drizzle(client, { schema });
 
-if (!building) {
-	migrate(db, { migrationsFolder: 'drizzle' });
-}

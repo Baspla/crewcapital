@@ -483,25 +483,25 @@ export const assertUserPortfolio = async (userId: string) => {
         return existingPortfolio;
     }
 
-    // Transaction for better-sqlite3 must be synchronous
-    return db.transaction((tx) => {
+    // Transaction
+    return await db.transaction(async (tx) => {
         // 1. Create Portfolio
-        const newPortfolio = tx.insert(schema.portfolio).values({
+        const [newPortfolio] = await tx.insert(schema.portfolio).values({
             userId,
             name: 'Main Portfolio'
-        }).returning().get(); // .get() returns the first row
+        }).returning();
 
         if (!newPortfolio) throw new Error("Failed to create portfolio");
 
         // 2. Add 100,000 EUR entry to portfolio_currency
-        tx.insert(schema.portfolioCurrency).values({
+        await tx.insert(schema.portfolioCurrency).values({
             portfolioId: newPortfolio.id,
             currencyId: 'EUR',
             amount: 100000
-        }).run();
+        });
 
         // 3. Record the transaction (Gift)
-        tx.insert(schema.transaction).values({
+        await tx.insert(schema.transaction).values({
             portfolioId: newPortfolio.id,
             type: 'gift',
             totalValue: 100000,
@@ -509,7 +509,7 @@ export const assertUserPortfolio = async (userId: string) => {
             toCurrencyId: 'EUR',
             executedAt: new Date(),
             notes: 'Starting capital'
-        }).run();
+        });
 
         console.log(`Created portfolio for user ${userId} with starting gift of 100,000 EUR.`);
 

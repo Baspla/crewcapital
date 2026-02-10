@@ -1,35 +1,35 @@
-import { check, integer, real, sqliteTable, text, index } from 'drizzle-orm/sqlite-core';
+import { pgTable, text, integer, doublePrecision, boolean, timestamp, check, index } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
-export const user = sqliteTable('user', {
+export const user = pgTable('user', {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  emailVerified: integer("email_verified", { mode: "boolean" })
+  emailVerified: boolean("email_verified")
     .default(false)
     .notNull(),
   image: text("image"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
-    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+  createdAt: timestamp("created_at", { mode: "date" })
+    .defaultNow()
     .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .defaultNow()
+    .$onUpdate(() => new Date())
     .notNull(),
   groups: text("groups").default("[]"),
 });
 
-export const session = sqliteTable(
+export const session = pgTable(
   "session",
   {
 	id: text("id").primaryKey(),
-	expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+	expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
 	token: text("token").notNull().unique(),
-	createdAt: integer("created_at", { mode: "timestamp_ms" })
-	  .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+	createdAt: timestamp("created_at", { mode: "date" })
+	  .defaultNow()
 	  .notNull(),
-	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-	  .$onUpdate(() => /* @__PURE__ */ new Date())
+	updatedAt: timestamp("updated_at", { mode: "date" })
+	  .$onUpdate(() => new Date())
 	  .notNull(),
 	ipAddress: text("ip_address"),
 	userAgent: text("user_agent"),
@@ -40,7 +40,7 @@ export const session = sqliteTable(
   (table) => [index("session_userId_idx").on(table.userId)],
 );
 
-export const account = sqliteTable(
+export const account = pgTable(
   "account",
   {
 	id: text("id").primaryKey(),
@@ -52,37 +52,37 @@ export const account = sqliteTable(
 	accessToken: text("access_token"),
 	refreshToken: text("refresh_token"),
 	idToken: text("id_token"),
-	accessTokenExpiresAt: integer("access_token_expires_at", {
-	  mode: "timestamp_ms",
+	accessTokenExpiresAt: timestamp("access_token_expires_at", {
+	  mode: "date",
 	}),
-	refreshTokenExpiresAt: integer("refresh_token_expires_at", {
-	  mode: "timestamp_ms",
+	refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
+	  mode: "date",
 	}),
 	scope: text("scope"),
 	password: text("password"),
-	createdAt: integer("created_at", { mode: "timestamp_ms" })
-	  .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+	createdAt: timestamp("created_at", { mode: "date" })
+	  .defaultNow()
 	  .notNull(),
-	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-	  .$onUpdate(() => /* @__PURE__ */ new Date())
+	updatedAt: timestamp("updated_at", { mode: "date" })
+	  .$onUpdate(() => new Date())
 	  .notNull(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
 );
 
-export const verification = sqliteTable(
+export const verification = pgTable(
   "verification",
   {
 	id: text("id").primaryKey(),
 	identifier: text("identifier").notNull(),
 	value: text("value").notNull(),
-	expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
-	createdAt: integer("created_at", { mode: "timestamp_ms" })
-	  .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+	expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+	createdAt: timestamp("created_at", { mode: "date" })
+	  .defaultNow()
 	  .notNull(),
-	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-	  .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-	  .$onUpdate(() => /* @__PURE__ */ new Date())
+	updatedAt: timestamp("updated_at", { mode: "date" })
+	  .defaultNow()
+	  .$onUpdate(() => new Date())
 	  .notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
@@ -111,7 +111,7 @@ export const accountRelations = relations(account, ({ one }) => ({
 }));
 
 
-export const assetCategory = sqliteTable('asset_category', {
+export const assetCategory = pgTable('asset_category', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
 	description: text('description')
@@ -121,11 +121,11 @@ export const assetCategoryRelations = relations(assetCategory, ({ many }) => ({
 	assets: many(asset)
 }));
 
-export const currency = sqliteTable('currency', {
+export const currency = pgTable('currency', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
 	symbol: text('symbol').notNull().unique(),
-	isRealWorld: integer('is_real_world', { mode: 'boolean' }).notNull().default(true)
+	isRealWorld: boolean('is_real_world').notNull().default(true)
 });
 
 export const currencyRelations = relations(currency, ({ many }) => ({
@@ -137,7 +137,7 @@ export const currencyRelations = relations(currency, ({ many }) => ({
 	exchangePairsTo: many(exchangePair, { relationName: 'toCurrency' })
 }));
 
-export const asset = sqliteTable('asset', {
+export const asset = pgTable('asset', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
@@ -149,8 +149,8 @@ export const asset = sqliteTable('asset', {
 	currencyId: text('currency_id')
 		.notNull()
 		.references(() => currency.id),
-	createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-	updatedAt: integer('updated_at', { mode: 'timestamp' })
+	createdAt: timestamp('created_at', { mode: 'date' }).$defaultFn(() => new Date()),
+	updatedAt: timestamp('updated_at', { mode: 'date' })
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date())
 });
@@ -169,18 +169,18 @@ export const assetRelations = relations(asset, ({ one, many }) => ({
 	transactions: many(transaction)
 }));
 
-export const assetPriceHistory = sqliteTable('asset_price_history', {
+export const assetPriceHistory = pgTable('asset_price_history', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
 	assetId: text('asset_id')
 		.notNull()
 		.references(() => asset.id),
-	date: integer('date', { mode: 'timestamp' }).notNull(),
-	open: real('open'),
-	high: real('high'),
-	low: real('low'),
-	close: real('close'),
+	date: timestamp('date', { mode: 'date' }).notNull(),
+	open: doublePrecision('open'),
+	high: doublePrecision('high'),
+	low: doublePrecision('low'),
+	close: doublePrecision('close'),
 	volume: integer('volume')
 });
 
@@ -191,7 +191,7 @@ export const assetPriceHistoryRelations = relations(assetPriceHistory, ({ one })
 	})
 }));
 
-export const portfolio = sqliteTable('portfolio', {
+export const portfolio = pgTable('portfolio', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
@@ -199,8 +199,8 @@ export const portfolio = sqliteTable('portfolio', {
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
 	name: text('name').notNull(),
-	createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-	updatedAt: integer('updated_at', { mode: 'timestamp' })
+	createdAt: timestamp('created_at', { mode: 'date' }).$defaultFn(() => new Date()),
+	updatedAt: timestamp('updated_at', { mode: 'date' })
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date())
 });
@@ -216,7 +216,7 @@ export const portfolioRelations = relations(portfolio, ({ one, many }) => ({
 	predictionMarketShares: many(predictionMarketShare)
 }));
 
-export const portfolioCurrency = sqliteTable('portfolio_currency', {
+export const portfolioCurrency = pgTable('portfolio_currency', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
@@ -226,8 +226,8 @@ export const portfolioCurrency = sqliteTable('portfolio_currency', {
 	currencyId: text('currency_id')
 		.notNull()
 		.references(() => currency.id),
-	amount: real('amount').notNull().default(0),
-	updatedAt: integer('updated_at', { mode: 'timestamp' })
+	amount: doublePrecision('amount').notNull().default(0),
+	updatedAt: timestamp('updated_at', { mode: 'date' })
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date())
 });
@@ -243,7 +243,7 @@ export const portfolioCurrencyRelations = relations(portfolioCurrency, ({ one })
 	})
 }));
 
-export const assetInventory = sqliteTable('asset_inventory', {
+export const assetInventory = pgTable('asset_inventory', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
@@ -253,10 +253,10 @@ export const assetInventory = sqliteTable('asset_inventory', {
 	assetId: text('asset_id')
 		.notNull()
 		.references(() => asset.id),
-	quantity: real('quantity').notNull().default(0),
-	averageBuyPrice: real('average_buy_price').default(0),
-	totalFees: real('total_fees').default(0),
-	updatedAt: integer('updated_at', { mode: 'timestamp' })
+	quantity: doublePrecision('quantity').notNull().default(0),
+	averageBuyPrice: doublePrecision('average_buy_price').default(0),
+	totalFees: doublePrecision('total_fees').default(0),
+	updatedAt: timestamp('updated_at', { mode: 'date' })
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date())
 });
@@ -272,7 +272,7 @@ export const assetInventoryRelations = relations(assetInventory, ({ one }) => ({
 	})
 }));
 
-export const transaction = sqliteTable('transaction', {
+export const transaction = pgTable('transaction', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
@@ -283,18 +283,18 @@ export const transaction = sqliteTable('transaction', {
 	type: text('type', {
 		enum: ['buy', 'sell', 'deposit', 'withdrawal','sent','received', 'gift', 'fee', 'currency_conversion', 'prediction_cost', 'prediction_win', 'prediction_draw', 'prediction_reimbursement', 'prediction_sale']
 	}).notNull(),
-	amountOfUnits: real('amount_of_units'), // Quantity of asset
-	pricePerUnit: real('price_per_unit'),
-	totalValue: real('total_value'), // value in toCurrency
-	fee: real('fee').default(0),
-	conversionRate: real('conversion_rate'),
+	amountOfUnits: doublePrecision('amount_of_units'), // Quantity of asset
+	pricePerUnit: doublePrecision('price_per_unit'),
+	totalValue: doublePrecision('total_value'), // value in toCurrency
+	fee: doublePrecision('fee').default(0),
+	conversionRate: doublePrecision('conversion_rate'),
 	fromCurrencyId: text('from_currency_id')
 		.notNull()
 		.references(() => currency.id),
 	toCurrencyId: text('to_currency_id')
 		.notNull()
 		.references(() => currency.id),
-	executedAt: integer('executed_at', { mode: 'timestamp' })
+	executedAt: timestamp('executed_at', { mode: 'date' })
 		.notNull()
 		.$defaultFn(() => new Date()),
 	predictionMarketShareId: text('prediction_market_share_id').references(() => predictionMarketShare.id, { onDelete: 'set null' }),
@@ -326,7 +326,7 @@ export const transactionRelations = relations(transaction, ({ one }) => ({
 	})
 }));
 
-export const exchangePair = sqliteTable('exchange_pair', {
+export const exchangePair = pgTable('exchange_pair', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
@@ -337,7 +337,7 @@ export const exchangePair = sqliteTable('exchange_pair', {
 		.notNull()
 		.references(() => currency.id),
 	symbol: text('symbol').unique().notNull(), // e.g. "EUR/USD" or "EURUSD"
-	staticConversionRate: real('static_conversion_rate'),
+	staticConversionRate: doublePrecision('static_conversion_rate'),
 	name: text('name')
 });
 
@@ -355,13 +355,13 @@ export const exchangePairRelations = relations(exchangePair, ({ one, many }) => 
 	rates: many(exchangeRateHistory)
 }));
 
-export const exchangeRateHistory = sqliteTable('exchange_rate_history', {
+export const exchangeRateHistory = pgTable('exchange_rate_history', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
 	pairId: text('pair_id').notNull().references(() => exchangePair.id),
-	rate: real('rate').notNull(),
-	date: integer('date', { mode: 'timestamp' }).notNull()
+	rate: doublePrecision('rate').notNull(),
+	date: timestamp('date', { mode: 'date' }).notNull()
 });
 
 export const exchangeRateHistoryRelations = relations(exchangeRateHistory, ({ one }) => ({
@@ -371,7 +371,7 @@ export const exchangeRateHistoryRelations = relations(exchangeRateHistory, ({ on
 	})
 }));
 
-export const predictionMarket = sqliteTable('prediction_market', {
+export const predictionMarket = pgTable('prediction_market', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
@@ -384,8 +384,8 @@ export const predictionMarket = sqliteTable('prediction_market', {
 	}).default('null'),
 	title: text('title').notNull(),
 
-	yesPool: real('yes_pool').notNull(),
-	noPool: real('no_pool').notNull(),
+	yesPool: doublePrecision('yes_pool').notNull(),
+	noPool: doublePrecision('no_pool').notNull(),
 
 	// This is the currency in which shares are bought/sold NOT of the tracked asset (if any)
 	currencyId: text('currency_id')
@@ -398,13 +398,13 @@ export const predictionMarket = sqliteTable('prediction_market', {
 
 	// Asset Prediction fields
 	assetId: text('asset_id').references(() => asset.id),
-	targetPrice: real('target_price'),
+	targetPrice: doublePrecision('target_price'),
 	direction: text('direction', { enum: ['above', 'below'] }),
 
-	endDate: integer('end_date', { mode: 'timestamp' }).notNull(),
-	createdAt: integer('created_at', { mode: 'timestamp' })
+	endDate: timestamp('end_date', { mode: 'date' }).notNull(),
+	createdAt: timestamp('created_at', { mode: 'date' })
 		.$defaultFn(() => new Date()),
-	updatedAt: integer('updated_at', { mode: 'timestamp' })
+	updatedAt: timestamp('updated_at', { mode: 'date' })
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date())
 }, (table) => [
@@ -427,17 +427,17 @@ export const predictionMarketRelations = relations(predictionMarket, ({ one, man
 	history: many(predictionMarketHistory)
 }));
 
-export const predictionMarketHistory = sqliteTable('prediction_market_history', {
+export const predictionMarketHistory = pgTable('prediction_market_history', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
 	predictionMarketId: text('prediction_market_id')
 		.notNull()
 		.references(() => predictionMarket.id),
-	date: integer('date', { mode: 'timestamp' }).notNull(),
-	yesPool: real('yes_pool').notNull(),
-	noPool: real('no_pool').notNull(),
-	probability: real('probability').notNull() // Probability of "yes" outcome at this point in time, for easy querying without calculating on the fly
+	date: timestamp('date', { mode: 'date' }).notNull(),
+	yesPool: doublePrecision('yes_pool').notNull(),
+	noPool: doublePrecision('no_pool').notNull(),
+	probability: doublePrecision('probability').notNull() // Probability of "yes" outcome at this point in time, for easy querying without calculating on the fly
 });
 
 export const predictionMarketHistoryRelations = relations(predictionMarketHistory, ({ one }) => ({
@@ -447,7 +447,7 @@ export const predictionMarketHistoryRelations = relations(predictionMarketHistor
 	})
 }));
 
-export const predictionMarketShare = sqliteTable('prediction_market_share', {
+export const predictionMarketShare = pgTable('prediction_market_share', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
@@ -457,12 +457,12 @@ export const predictionMarketShare = sqliteTable('prediction_market_share', {
 	predictionMarketId: text('prediction_market_id')
 		.notNull()
 		.references(() => predictionMarket.id),
-	amount: real('amount').notNull(),
+	amount: doublePrecision('amount').notNull(),
 	currencyId: text('currency_id') // Wager currency
 		.notNull()
 		.references(() => currency.id),
 	choice: text('choice', { enum: ['yes', 'no'] }).notNull(),
-	createdAt: integer('created_at', { mode: 'timestamp' })
+	createdAt: timestamp('created_at', { mode: 'date' })
 		.$defaultFn(() => new Date())
 }, (table) => [
 	check('amountPositive', sql`${table.amount} > 0`),

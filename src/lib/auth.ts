@@ -8,7 +8,7 @@ import { env } from '$env/dynamic/private';
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
-		provider: "sqlite",
+		provider: "pg",
 	}),
 	user: {
 		additionalFields: {
