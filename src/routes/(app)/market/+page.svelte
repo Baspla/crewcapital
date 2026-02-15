@@ -6,6 +6,7 @@
 	import AssetIcon from '$lib/components/AssetIcon.svelte';
 	import SimpleChart from '$lib/components/charts/SimpleChart.svelte';
 	import WorkInProgress from '$lib/components/WorkInProgress.svelte';
+	import Container from '$lib/components/layout/Container.svelte';
 
 	let { data } = $props();
 
@@ -16,7 +17,7 @@
 	}
 </script>
 
-<div class="container mx-auto p-4">
+<Container>
 	<h1 class="mb-6 text-3xl font-bold">Market</h1>
 	<table class="table w-full table-auto">
 		<thead>
@@ -82,4 +83,4 @@
 		</Pagination>
 	</div>
 	<WorkInProgress />
-</div>
+</Container>

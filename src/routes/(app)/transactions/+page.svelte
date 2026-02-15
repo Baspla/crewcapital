@@ -4,6 +4,7 @@
 	import { Pagination } from '@skeletonlabs/skeleton-svelte';
 	import { ArrowLeftIcon, ArrowRightIcon } from '@lucide/svelte';
 	import { formatCurrency } from '$lib/currency.js';
+	import Container from '$lib/components/layout/Container.svelte';
 
 	let { data } = $props();
 
@@ -31,7 +32,7 @@
 	}
 </script>
 
-<div class="relative container mx-auto p-4">
+<Container>
 	<h1 class="mb-4 text-3xl font-bold">Transactions</h1>
 	<table class="table table-auto">
 		<thead>
@@ -109,4 +110,4 @@
 			</Pagination.NextTrigger>
 		</Pagination>
 	</div>
-</div>
+</Container>

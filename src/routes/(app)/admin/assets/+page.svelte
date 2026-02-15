@@ -7,6 +7,7 @@
 	import { ArrowLeftIcon, ArrowRightIcon, RefreshCwIcon } from '@lucide/svelte';
 	import AssetIcon from '$lib/components/AssetIcon.svelte';
 	import SimpleChart from '$lib/components/charts/SimpleChart.svelte';
+	import Container from '$lib/components/layout/Container.svelte';
 
 	let { form, data } = $props();
 
@@ -23,7 +24,7 @@
 
 </script>
 
-<div class="container mx-auto p-4">
+<Container>
 	<h1 class="mb-4 text-2xl font-bold inline-flex items-center ">
 		Testing
 		<WorkInProgress class="size-10" />
@@ -124,4 +125,4 @@
 			</Pagination.NextTrigger>
 		</Pagination>
 	</div>
-</div>
+</Container>

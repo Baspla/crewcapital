@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { formatCurrency } from '$lib/currency.js';
 	import { ArrowUp, ArrowDown } from '@lucide/svelte';
+	import Container from '$lib/components/layout/Container.svelte';
 
 	let { data } = $props();
 
@@ -37,7 +38,7 @@
 	}
 </script>
 
-<div class="container mx-auto p-4">
+<Container>
 	<h2 class="text-3xl font-bold mb-4">Leaderboard</h2>
 	
 	<div class="table-container">
@@ -101,4 +102,4 @@
 			</tbody>
 		</table>
 	</div>
-</div>
+</Container>

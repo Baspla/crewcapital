@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import Container from '$lib/components/layout/Container.svelte';
 
 	let { data, form } = $props();
 	let currencies = $derived(data.currencies);
@@ -8,7 +9,7 @@
 	let marketType = $state('manual'); // 'manual' | 'asset'
 </script>
 
-<div class="container mx-auto p-4">
+<Container>
 	<h1 class="text-3xl font-bold mb-6">Create New Prediction Market</h1>
 
 	{#if form?.error}
@@ -115,4 +116,4 @@
 			{loading ? 'Creating Market...' : 'Create Market'}
 		</button>
 	</form>
-</div>
+</Container>

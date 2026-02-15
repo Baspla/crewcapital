@@ -5,6 +5,7 @@
 	import { DatePicker, Pagination, Portal } from '@skeletonlabs/skeleton-svelte';
 	import { ArrowLeftIcon, ArrowRightIcon } from '@lucide/svelte';
 	import CandleChart from '$lib/components/charts/CandleChart.svelte';
+	import Container from '$lib/components/layout/Container.svelte';
 
 	let { data, form } = $props();
     let dateRange = $state<any[]>([]);
@@ -17,7 +18,7 @@
 </script>
 
 {#if data.asset}
-	<div class="container mx-auto p-4">
+	<Container>
 		<a href="/market/assets/{data.asset.id}" class="btn preset">
 			To Asset Page
 		</a>
@@ -212,7 +213,7 @@
 				</Pagination.NextTrigger>
 			</Pagination>
 		</div>
-	</div>
+	</Container>
 {:else}
 	<p class="text-red-500">Asset not found.</p>
 {/if}

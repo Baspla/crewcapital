@@ -5,6 +5,7 @@
 	import { ArrowLeftIcon, ArrowRightIcon } from '@lucide/svelte';
   	import CandleChart from '$lib/components/charts/CandleChart.svelte';
 	import AssetIcon from '$lib/components/AssetIcon.svelte';
+	import Container from '$lib/components/layout/Container.svelte';
 
 	let { data } = $props();
 
@@ -16,7 +17,7 @@
 </script>
 
 {#if data.asset}
-	<div class="container mx-auto p-4">
+	<Container>
 		<div class="mb-4 rounded-base p-4">
 			<AssetIcon asset={data.asset} />
 			<h2 class="mb-2 text-xl font-semibold">{data.asset.name} ({data.asset.symbol})</h2>
@@ -81,7 +82,7 @@
 				</Pagination.NextTrigger>
 			</Pagination>
 		</div>
-	</div>
+	</Container>
 {:else}
 	<p class="text-red-500">Asset not found.</p>
 {/if}

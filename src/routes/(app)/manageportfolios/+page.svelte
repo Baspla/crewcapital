@@ -1,8 +1,9 @@
 <script lang="ts">
 	import WorkInProgress from '$lib/components/WorkInProgress.svelte';
+	import Container from '$lib/components/layout/Container.svelte';
 </script>
 
-<div class="container mx-auto p-4">
+<Container>
 	<h1 class="text-3xl font-bold">Manage Portfolios</h1>
 	<WorkInProgress />
-</div>
+</Container>
