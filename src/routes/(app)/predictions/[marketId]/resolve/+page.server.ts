@@ -1,7 +1,7 @@
 import {
 	getPredictionMarketData,
 	resolvePredictionMarket
-} from '$lib/server/predictions/predictions';
+} from '$lib/server/services/predictions';
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 

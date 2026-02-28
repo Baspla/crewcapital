@@ -2,7 +2,3 @@ export * from '$lib/server/data-access/users';
 export * from '$lib/server/data-access/catalog';
 export * from '$lib/server/data-access/assets';
 export * from '$lib/server/data-access/portfolios';
-
-export * from '$lib/server/services/asset-history';
-export * from '$lib/server/services/bootstrap';
-export * from '$lib/server/services/portfolio';

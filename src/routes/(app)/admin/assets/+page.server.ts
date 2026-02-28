@@ -1,5 +1,6 @@
 import { fail } from '@sveltejs/kit';
-import { createAsset, getCurrencies, getAssetCategories, getAssetsPaginated, updateAssetHistory, getAssetBySymbol } from '$lib/server/db/actions';
+import { createAsset, getCurrencies, getAssetCategories, getAssetsPaginated, getAssetBySymbol } from '$lib/server/data-access';
+import { updateAssetHistory } from '$lib/server/services/asset-history';
 import type { Actions, PageServerLoad } from './$types';
 import { fetchRealTimeData } from '$lib/server/finance/yahooapi';
 

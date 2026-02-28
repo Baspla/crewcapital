@@ -3,7 +3,7 @@ import {
 	getPredictionMarketData,
 	getUserPredictionMarketPositions,
 	sellPredictionMarketShares
-} from '$lib/server/predictions/predictions';
+} from '$lib/server/services/predictions';
 import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';

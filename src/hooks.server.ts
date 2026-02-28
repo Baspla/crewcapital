@@ -3,8 +3,8 @@ import { auth } from "$lib/auth";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 
 import { building } from '$app/environment';
-import { assertBaseCurrencies, assertAssetCategories, assertCurrencyConversions } from '$lib/server/db/actions';
-import { updateMarketData } from '$lib/server/finance/financeUtils';
+import { assertBaseCurrencies, assertAssetCategories, assertCurrencyConversions } from '$lib/server/services/bootstrap';
+import { updateMarketData } from '$lib/server/services/market-data';
 
 if (!building) {
   await assertBaseCurrencies().catch((err) => {

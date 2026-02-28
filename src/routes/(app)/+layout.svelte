@@ -14,7 +14,13 @@
 		LogOutIcon,
 		LayersIcon,
 		BriefcaseIcon,
-		ChevronsUpDownIcon
+		ChevronsUpDownIcon,
+
+		BadgeDollarSign,
+
+		BadgeDollarSignIcon
+
+
 	} from '@lucide/svelte';
 	import { Menu, Navigation, Portal } from '@skeletonlabs/skeleton-svelte';
 	import { page } from '$app/state';
@@ -31,12 +37,12 @@
 	});
 
 	const links = [
-		{ label: 'Dashboard', href: '/', icon: LayoutDashboardIcon },
 		{ label: 'Market', href: '/market', icon: TrendingUpDownIcon },
 		{ label: 'Predictions', href: '/predictions', icon: TicketsIcon },
 		{ label: 'Portfolio', href: '/portfolio', icon: LayersIcon },
 		{ label: 'Transactions', href: '/transactions', icon: HistoryIcon },
-		{ label: 'Leaderboard', href: '/leaderboard', icon: CrownIcon }
+		{ label: 'Leaderboard', href: '/leaderboard', icon: CrownIcon },
+		{ label: 'Currency Exchange', href: '/exchange', icon: BadgeDollarSignIcon }
 	];
 
 	let innerWidth: number = $state(0);

@@ -1,8 +1,6 @@
 <script lang="ts">
 	import {
 		CheckIcon,
-		ChevronsUpDownIcon,
-		BriefcaseIcon,
 		SettingsIcon
 	} from '@lucide/svelte';
 	import { Menu, Portal } from '@skeletonlabs/skeleton-svelte';

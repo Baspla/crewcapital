@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
-import { createManualPredictionMarket, createAssetPredictionMarket } from '$lib/server/predictions/predictions';
+import { createManualPredictionMarket, createAssetPredictionMarket } from '$lib/server/services/predictions';
 import { fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';

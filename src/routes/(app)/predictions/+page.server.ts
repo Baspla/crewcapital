@@ -1,4 +1,4 @@
-import { getPredictionMarkets } from '$lib/server/predictions/predictions';
+import { getPredictionMarkets } from '$lib/server/services/predictions';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {

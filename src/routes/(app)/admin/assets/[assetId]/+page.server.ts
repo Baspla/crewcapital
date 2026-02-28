@@ -1,4 +1,6 @@
-import { getAssetById, getAssetPriceHistory, getUserAssetTransactions, updateAssetHistory } from "$lib/server/db/actions";
+import { getAssetById } from "$lib/server/data-access/assets";
+import { getUserAssetTransactions } from "$lib/server/data-access/portfolios";
+import { getAssetPriceHistory, updateAssetHistory } from "$lib/server/services/asset-history";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async (event) => {

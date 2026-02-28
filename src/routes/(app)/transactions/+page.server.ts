@@ -1,4 +1,4 @@
-import { getUserTransactions } from '$lib/server/db/actions';
+import { getUserTransactions } from '$lib/server/data-access/portfolios';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
