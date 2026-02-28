@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
 import {
 	calculateBoughtSharesForAmount,
+	calculateWholeShareBuyPreview,
 	calculateSaleAmountForShares,
 	getProbabilityForMarket
 } from '$lib/predictions/utils';
@@ -127,10 +128,21 @@ export async function buyPredictionMarketShares(
 		if (portfolioCurrency.amount < amount) {
 			throw new Error('Insufficient balance in portfolio currency');
 		}
-		const { userShares, yesPoolAfter, noPoolAfter } = calculateBoughtSharesForAmount(
+		const buyPreview = calculateWholeShareBuyPreview(
 			market.yesPool,
 			market.noPool,
 			amount,
+			side
+		);
+		if (!buyPreview) {
+			throw new Error('Amount is too low to buy at least one whole share');
+		}
+		const actualSpend = buyPreview.requiredAmount;
+		const userShares = buyPreview.wholeShares;
+		const { yesPoolAfter, noPoolAfter } = calculateBoughtSharesForAmount(
+			market.yesPool,
+			market.noPool,
+			actualSpend,
 			side
 		);
 		await tx
@@ -153,7 +165,7 @@ export async function buyPredictionMarketShares(
 		await tx
 			.update(schema.portfolioCurrency)
 			.set({
-				amount: portfolioCurrency.amount - amount
+				amount: portfolioCurrency.amount - actualSpend
 			})
 			.where(
 				and(
@@ -165,12 +177,12 @@ export async function buyPredictionMarketShares(
 			id: crypto.randomUUID(),
 			portfolioId,
 			type: 'prediction_cost',
-			totalValue: -amount,
+			totalValue: -actualSpend,
 			amountOfUnits: userShares,
-			pricePerUnit: amount / userShares,
+			pricePerUnit: actualSpend / userShares,
 			fee: 0,
 			predictionMarketShareId: shareId,
-			notes: `Purchased ${userShares.toFixed(4)} ${side} shares in prediction market "${market.title}"`,
+			notes: `Purchased ${userShares} ${side} shares in prediction market "${market.title}"`,
 			fromCurrencyId: market.currencyId,
 			toCurrencyId: market.currencyId,
 			executedAt: new Date()
@@ -183,7 +195,7 @@ export async function buyPredictionMarketShares(
 			date: new Date(),
 			probability: getProbabilityForMarket(yesPoolAfter, noPoolAfter, 'yes')
 		});
-		return { shareId, userShares };
+		return { shareId, userShares, spentAmount: actualSpend };
 	});
 }
 
@@ -218,7 +230,6 @@ export async function sellPredictionMarketShares(marketId: string, portfolioId: 
 				noPool: noPoolAfter
 			})
 			.where(eq(schema.predictionMarket.id, marketId));
-		await tx.delete(schema.predictionMarketShare).where(eq(schema.predictionMarketShare.id, shareId));
 		const portfolioCurrencies = await tx
 			.select()
 			.from(schema.portfolioCurrency)
@@ -257,6 +268,7 @@ export async function sellPredictionMarketShares(marketId: string, portfolioId: 
 			toCurrencyId: market.currencyId,
 			executedAt: new Date()
 		});
+		await tx.delete(schema.predictionMarketShare).where(eq(schema.predictionMarketShare.id, shareId));
 		await tx.insert(schema.predictionMarketHistory).values({
 			id: crypto.randomUUID(),
 			predictionMarketId: marketId,

@@ -36,6 +36,73 @@ export function calculateBoughtSharesForAmount(yesPool: number, noPool: number, 
 
 }
 
+export function calculateAmountForShares(
+    yesPool: number,
+    noPool: number,
+    shareAmount: number,
+    side: 'yes' | 'no'
+) {
+    if (shareAmount <= 0) {
+        throw new Error('shareAmount must be greater than 0');
+    }
+
+    const totalPool = yesPool + noPool;
+    const counterPool = side === 'yes' ? noPool : yesPool;
+
+    const b = totalPool - shareAmount;
+    const c = -shareAmount * counterPool;
+    const discriminant = Math.pow(b, 2) - (4 * c);
+
+    if (discriminant < 0) {
+        throw new Error('Invalid market state: negative discriminant in buy amount calculation');
+    }
+
+    const requiredAmount = (-b + Math.sqrt(discriminant)) / 2;
+
+    if (requiredAmount <= 0 || !Number.isFinite(requiredAmount)) {
+        throw new Error('Invalid market state: non-positive buy amount');
+    }
+
+    return requiredAmount;
+}
+
+export function calculateWholeShareBuyPreview(
+    yesPool: number,
+    noPool: number,
+    maxAmount: number,
+    side: 'yes' | 'no'
+) {
+    if (!Number.isFinite(maxAmount) || maxAmount <= 0) {
+        return null;
+    }
+
+    const rawPreview = calculateBoughtSharesForAmount(yesPool, noPool, maxAmount, side);
+    let wholeShares = Math.floor(rawPreview.userShares);
+
+    if (wholeShares < 1) {
+        return null;
+    }
+
+    let requiredAmount = calculateAmountForShares(yesPool, noPool, wholeShares, side);
+
+    while (wholeShares > 0 && requiredAmount - maxAmount > 1e-9) {
+        wholeShares -= 1;
+        if (wholeShares === 0) {
+            return null;
+        }
+        requiredAmount = calculateAmountForShares(yesPool, noPool, wholeShares, side);
+    }
+
+    const exactPreview = calculateBoughtSharesForAmount(yesPool, noPool, requiredAmount, side);
+
+    return {
+        wholeShares,
+        requiredAmount,
+        yesPoolAfter: exactPreview.yesPoolAfter,
+        noPoolAfter: exactPreview.noPoolAfter
+    };
+}
+
 export function calculateSaleAmountForShares(
     yesPool: number,
     noPool: number,

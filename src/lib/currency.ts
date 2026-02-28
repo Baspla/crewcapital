@@ -1,7 +1,8 @@
-export function formatCurrency(value: number, currency?: { symbol: string; id: string }) {
-		if (!currency) return value.toLocaleString('de-DE');
+export function formatCurrency(value: number | null | undefined, currency?: { symbol: string; id: string }) {
+		if (value === null || value === undefined) return '';
+		if (!currency) return value?.toLocaleString('de-DE') ?? '';
 
-		const formattedNumber = value.toLocaleString('de-DE', {
+		const formattedNumber = value?.toLocaleString('de-DE', {
 			minimumFractionDigits: 2,
 			maximumFractionDigits: 2
 		});

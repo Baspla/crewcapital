@@ -6,7 +6,7 @@ import {
 } from '$lib/server/services/predictions';
 import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { fail, error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const currency = currencies[0];
 
 	let userShares: any[] = [];
-	let portfolioId: string | null = null;
+	let portfolioBalance: number | null = null;
 
 	if (locals.user) {
 		// Find user's portfolio
@@ -43,8 +43,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.limit(1);
 
 		if (portfolios.length > 0) {
-			portfolioId = portfolios[0].id;
+			const portfolioId = portfolios[0].id;
 			userShares = await getUserPredictionMarketPositions(portfolioId, [marketId]);
+
+			const portfolioCurrencies = await db
+				.select()
+				.from(schema.portfolioCurrency)
+				.where(
+					and(
+						eq(schema.portfolioCurrency.portfolioId, portfolioId),
+						eq(schema.portfolioCurrency.currencyId, market.currencyId)
+					)
+				)
+				.limit(1);
+
+			portfolioBalance = portfolioCurrencies[0]?.amount ?? 0;
 		}
 	}
 
@@ -52,6 +65,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		market: { ...market, currency },
 		history,
 		userShares: userShares.map((s) => ({ ...s, id: s.id })), // ensure serializable
+		portfolioBalance,
 		user: locals.user
 	};
 };
@@ -65,7 +79,7 @@ export const actions: Actions = {
 		const amount = parseFloat(formData.get('amount') as string);
 		const side = formData.get('side') as 'yes' | 'no';
 
-		if (!marketId || isNaN(amount) || !side) {
+		if (!marketId || isNaN(amount) || amount <= 0 || (side !== 'yes' && side !== 'no')) {
 			return fail(400, { error: 'Invalid input' });
 		}
 
@@ -92,11 +106,9 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const marketId = formData.get('marketId') as string;
 		const shareId = formData.get('shareId') as string;
-		// note: sellPredictionMarketShares takes shareId. We need to pass it from UI.
-        
-        if (!shareId || !marketId) {
-             return fail(400, { error: 'Missing share ID' });
-        }
+		if (!shareId || !marketId) {
+			return fail(400, { error: 'Missing share ID' });
+		}
 
 		// Get portfolio
 		const portfolios = await db
